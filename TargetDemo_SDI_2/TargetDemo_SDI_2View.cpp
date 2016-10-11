@@ -56,6 +56,58 @@ void CTargetDemo_SDI_2View::OnInitialUpdate()
 	GetParentFrame()->RecalcLayout();
 	ResizeParentToFit();
 
+	m_Grid.SetEditable(false);
+	m_Grid.SetTextBkColor(RGB(0xFF, 0xFF, 0xE0));//yellow background
+	m_Grid.SetRowCount(1); //
+	m_Grid.SetColumnCount(5); //
+	m_Grid.SetFixedRowCount(1); //
+
+	for (int row = 0; row < m_Grid.GetRowCount(); row++)
+		for (int col = 0; col < m_Grid.GetColumnCount(); col++)
+		{
+
+			GV_ITEM Item;
+			Item.mask = GVIF_TEXT | GVIF_FORMAT;
+			Item.row = row;
+			Item.col = col;
+
+			m_Grid.SetRowHeight(row, 30); //set row heigh          
+			m_Grid.SetColumnWidth(0, 135); //set column width 
+			m_Grid.SetColumnWidth(col, 135); //
+
+			if (row == 0 && col == 0) //
+			{
+				Item.nFormat = DT_CENTER | DT_WORDBREAK;
+				Item.strText.Format(_T("ID"), col);
+			}
+			else if (row == 0 && col == 1) //
+			{
+				Item.nFormat = DT_CENTER | DT_WORDBREAK;
+				Item.strText.Format(_T(" Type "), col);
+			}
+			else if (row == 0 && col == 2) //
+			{
+				Item.nFormat = DT_CENTER | DT_WORDBREAK;
+				Item.strText.Format(_T(" X "), col);
+			}
+			else if (row == 0 && col == 3) //
+			{
+				Item.nFormat = DT_CENTER | DT_WORDBREAK;
+				Item.strText.Format(_T(" Y "), col);
+			}
+			else if (row == 0 && col == 4) //
+			{
+				Item.nFormat = DT_CENTER | DT_WORDBREAK;
+				Item.strText.Format(_T(" Path "), col);
+			}
+			else
+			{
+				Item.nFormat = DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS;
+				Item.strText.Format(_T(""), 2);
+			}
+			m_Grid.SetItem(&Item);
+		}
+
 }
 
 

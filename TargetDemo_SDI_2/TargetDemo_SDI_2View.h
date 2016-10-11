@@ -2,6 +2,8 @@
 // TargetDemo_SDI_2View.h : CTargetDemo_SDI_2View 클래스의 인터페이스
 //
 
+#include "GridCtrl.h"
+
 #pragma once
 
 
@@ -22,6 +24,7 @@ public:
 
 // 작업입니다.
 public:
+	CGridCtrl m_Grid;
 
 // 재정의입니다.
 public:
@@ -37,7 +40,7 @@ public:
 	virtual void AssertValid() const;
 	virtual void Dump(CDumpContext& dc) const;
 #endif
-
+	
 protected:
 
 // 생성된 메시지 맵 함수

@@ -46,6 +46,16 @@ protected:
 // 생성된 메시지 맵 함수
 protected:
 	DECLARE_MESSAGE_MAP()
+public:
+	int ti_id;
+	int ti_type;
+	double ti_x;
+	double ti_y;
+	CString ti_path;
+	afx_msg void OnBnClickedButtonLoad();
+	afx_msg void OnBnDoubleclickedButtonSave();
+	afx_msg void OnBnClickedButtonInput();
+	afx_msg void OnBnClickedButtonClear();
 };
 
 #ifndef _DEBUG  // TargetDemo_SDI_2View.cpp의 디버그 버전

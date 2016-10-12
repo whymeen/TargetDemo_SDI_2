@@ -3,6 +3,8 @@
 //
 
 #include "GridCtrl.h"
+#include <vector>
+
 
 #pragma once
 
@@ -25,7 +27,19 @@ public:
 // 작업입니다.
 public:
 	CGridCtrl m_Grid;
-
+	int		m_nRows;
+	int		m_nFixRows;
+	typedef	struct targetInform {
+		int id;
+		int type;
+		double x;
+		double y;
+		CString path;
+	}targetInform;
+	std::vector<targetInform> tVector;
+	std::vector<targetInform>::iterator tVec_it;
+	void VectorAdd(int id, int type, double x, double y, CString path);
+	void ShowGrid();
 // 재정의입니다.
 public:
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);

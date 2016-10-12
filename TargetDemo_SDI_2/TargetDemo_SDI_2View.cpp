@@ -3,6 +3,7 @@
 //
 
 #include "stdafx.h"
+#include "../Xmlparser/tinyxml2.h"
 // SHARED_HANDLERS는 미리 보기, 축소판 그림 및 검색 필터 처리기를 구현하는 ATL 프로젝트에서 정의할 수 있으며
 // 해당 프로젝트와 문서 코드를 공유하도록 해 줍니다.
 #ifndef SHARED_HANDLERS
@@ -87,8 +88,8 @@ void CTargetDemo_SDI_2View::OnInitialUpdate()
 			Item.col = col;
 
 			m_Grid.SetRowHeight(row, 30); //set row heigh          
-			m_Grid.SetColumnWidth(0, 135); //set column width 
-			m_Grid.SetColumnWidth(col, 135); //
+			//m_Grid.SetColumnWidth(0, 118); //set column width 
+			m_Grid.SetColumnWidth(col, 118); //
 
 			if (row == 0 && col == 0) //
 			{
@@ -152,23 +153,161 @@ CTargetDemo_SDI_2Doc* CTargetDemo_SDI_2View::GetDocument() const // 디버그되지 �
 
 void CTargetDemo_SDI_2View::OnBnClickedButtonLoad()
 {
-	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	CString str = _T("XML files(*.xml)|*.xml");
+	CFileDialog dlg(TRUE, NULL, NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, str, this);
+	if (IDOK == dlg.DoModal())
+	{
+		tVector.clear();
+
+		CString strPathName = dlg.GetPathName();
+		tinyxml2::XMLDocument doc;
+		doc.LoadFile((CStringA)strPathName);
+
+		// Root Node 접근
+		tinyxml2::XMLElement* pRootNode = doc.FirstChildElement("Target_Information");
+		if (NULL == pRootNode)
+			return;
+		// 노드의 애트리뷰트 값을 얻기
+		// 원하는 Node의 Element 접근 후 값 읽기
+
+		// "Field"의 노드의 마지막 애트리뷰트까지 반복
+		for (tinyxml2::XMLElement* pNodeElem = pRootNode->FirstChildElement("Field"); pNodeElem; pNodeElem = pNodeElem->NextSiblingElement())
+		{
+			tinyxml2::XMLAttribute* pAttribute = (tinyxml2::XMLAttribute*)pNodeElem->FirstAttribute(); //현재 노드의 첫번째 애트리뷰트 값으로 이동
+
+			targetInform ti;
+			ti.id = pAttribute->IntValue();									// 값을 Int로 반환하여 저장
+
+			pAttribute = (tinyxml2::XMLAttribute*)pAttribute->Next();		// 다음노드로 이동
+			ti.type = pAttribute->IntValue();								// 값을 Int로 반환하여 저장
+
+			pAttribute = (tinyxml2::XMLAttribute*)pAttribute->Next();		// 다음노드로 이동
+			ti.x = pAttribute->DoubleValue();								// 값을 double로 반환하여 저장
+
+			pAttribute = (tinyxml2::XMLAttribute*)pAttribute->Next();		// 다음노드로 이동
+			ti.y = pAttribute->DoubleValue();								// 값을 double로 반환하여 저장    
+
+			pAttribute = (tinyxml2::XMLAttribute*)pAttribute->Next();		// 다음노드로 이동
+			const char* pszAttribute = pAttribute->Value();					// pszAttribute=Data
+
+			ti.path = (CString)pszAttribute;
+			tVector.push_back(ti);											// vector에 저장
+		}
+		ShowGrid();
+	}
+
 }
 
 
 void CTargetDemo_SDI_2View::OnBnDoubleclickedButtonSave()
 {
-	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	CString str = _T("XML files(*.xml)|*.xml");
+	CFileDialog dlg(false, NULL, NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, str, this);
+	if (IDOK == dlg.DoModal())
+	{
+		tinyxml2::XMLDocument doc;
+		tinyxml2::XMLDeclaration* pDecl = doc.NewDeclaration();
+		doc.LinkEndChild(pDecl);
+
+		// Root Node
+		tinyxml2::XMLElement* pRootNode = doc.NewElement("Target_Information");
+		doc.LinkEndChild(pRootNode);
+
+		// child Node
+		for (int i = 0; i < tVector.size(); i++)
+		{
+			targetInform ti;
+			ti = tVector.at(i);
+			tinyxml2::XMLElement* pNode = doc.NewElement("Field");
+			pRootNode->LinkEndChild(pNode);
+			pNode->SetAttribute("id", ti.id);     //id
+			pNode->SetAttribute("type", ti.type); //type
+			pNode->SetAttribute("x", ti.x); // X (소수점)
+			pNode->SetAttribute("y", ti.y); // Y (소수점)
+			pNode->SetAttribute("path", (CStringA)ti.path);
+		}
+
+		// .xml 저장
+		CString strSavePathName = dlg.GetPathName();
+		doc.SaveFile((CStringA)strSavePathName);
+
+	}
 }
 
 
 void CTargetDemo_SDI_2View::OnBnClickedButtonInput()
 {
-	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	UpdateData();
+	VectorAdd(ti_id, ti_type, ti_x, ti_y, ti_path);
+	ShowGrid();
+
 }
 
 
 void CTargetDemo_SDI_2View::OnBnClickedButtonClear()
 {
-	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	int nRow = m_Grid.GetFocusCell().row;
+	if (nRow >= 0)
+	{
+		tVec_it = tVector.begin() + (nRow - 1);
+		tVector.erase(tVec_it);
+		m_Grid.DeleteRow(nRow);
+		m_Grid.Invalidate();
+	}
+}
+
+
+void CTargetDemo_SDI_2View::VectorAdd(int id, int type, double x, double y, CString path)
+{
+	targetInform ti;
+	ti.id = id;
+	ti.type = type;
+	ti.x = x;
+	ti.y = y;
+	ti.path = path;
+	tVector.push_back(ti);
+}
+
+void CTargetDemo_SDI_2View::ShowGrid()
+{
+	m_Grid.SetRowCount(tVector.size() + 1);
+	for (int row = 0; row < tVector.size(); row++)
+	{
+		targetInform ti;
+		ti = tVector.at(row);
+		for (int col = 0; col < m_Grid.GetColumnCount(); col++)
+		{
+			GV_ITEM Item;
+			Item.mask = GVIF_TEXT | GVIF_FORMAT;
+			Item.row = row + 1;
+			Item.col = col;
+			if (col == 0) //
+			{
+				Item.nFormat = DT_CENTER | DT_WORDBREAK;
+				Item.strText.Format(_T("%d"), ti.id);
+			}
+			if (col == 1) //
+			{
+				Item.nFormat = DT_CENTER | DT_WORDBREAK;
+				Item.strText.Format(_T("%d"), ti.type);
+			}
+			if (col == 2) //
+			{
+				Item.nFormat = DT_CENTER | DT_WORDBREAK;
+				Item.strText.Format(_T("%f"), ti.x);
+			}
+			if (col == 3) //
+			{
+				Item.nFormat = DT_CENTER | DT_WORDBREAK;
+				Item.strText.Format(_T("%f"), ti.y);
+			}
+			if (col == 4) //
+			{
+				Item.nFormat = DT_CENTER | DT_WORDBREAK;
+				Item.strText.Format(_T("%s"), ti.path);
+			}
+			m_Grid.SetItem(&Item);
+		}
+	}
+	m_Grid.Invalidate();
 }
